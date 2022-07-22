@@ -33,13 +33,7 @@ clean :
 
 .PHONY:
 deploy : all
-#	cp lib$(NAME).so.$(VERSION) $(SDKTARGETSYSROOT)/usr/lib/
-#	cp $(UAPI_HEADER) $(SDKTARGETSYSROOT)/usr/include/
-#	cp $(UAPIIF_HEADER) $(SDKTARGETSYSROOT)/usr/include/
-#	cp $(UAPI_HEADER) $(SDKTARGETSYSROOT)/usr/src/kernel/include/uapi/drm/
-#	cp ../../../../interface/src/*.h $(SDKTARGETSYSROOT)/usr/include/
-#	cp ../../../../interface/src/*.h $(SDKTARGETSYSROOT)/usr/src/kernel/include/
-	scp  lib$(NAME).so.$(VERSION) root@$(BOARD_IP):/usr/lib/
+	scp  lib$(NAME).so* root@$(BOARD_IP):/usr/lib/
 
 .PHONY:
 scp: lib$(NAME).so.$(VERSION)
