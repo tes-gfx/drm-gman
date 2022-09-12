@@ -10,6 +10,7 @@ struct gman_device;
 struct gman_stream;
 struct gman_bo;
 
+typedef uint64_t gman_dma_addr_t;
 
 /* device functions:
  */
@@ -26,6 +27,7 @@ uint32_t *gman_device_mem_io(struct gman_device *dev);
 struct gman_bo *gman_bo_new(struct gman_device *dev,
 		uint32_t size, uint32_t flags);
 void *gman_bo_map(struct gman_bo *bo);
+gman_dma_addr_t gman_bo_dma_addr(struct gman_bo *bo);
 void gman_bo_del(struct gman_bo *bo);
 struct gman_bo *gman_bo_from_dmabuf(struct gman_device *dev, int fd);
 
@@ -45,12 +47,8 @@ struct gman_stream {
 	void *jump;             /* ptr to jump address at stream's end */
 };
 
-/* todo: integrate with gman_priv_bo and hide everything to user side,
- * use functions instead to get values */
 struct gman_bo {
-	void *paddr;
-	void *map;
-	uint32_t handle;
+	int dummy;
 };
 
 struct gman_stream *gman_stream_new(struct gman_device *device);
@@ -60,5 +58,13 @@ void gman_stream_flush(struct gman_stream *stream);
 int gman_stream_finish(struct gman_stream *stream);
 uint32_t gman_stream_timestamp(struct gman_stream *stream);
 
+/* Display Interface support
+ */
+#ifndef fbo_t
+typedef struct _fbo_t fbo_t;
+#endif
+
+extern fbo_t * gman_createfbo(struct gman_device *device, struct gman_bo *bo, unsigned int width, unsigned int height, unsigned int pitch, int bpp);
+extern void gman_deletefbo(struct gman_device *device, fbo_t *fbo);
 
 #endif

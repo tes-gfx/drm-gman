@@ -30,23 +30,24 @@ struct gman_device {
 struct gman_bo_priv {
 	struct gman_bo     base;
 	struct gman_device *dev;
-	void              *map;           /* userspace mmap'ing (if there is one) */
-	uint32_t          size;
-	uint32_t          handle;
-	uint32_t          flags;
-	uint64_t          offset;         /* offset to mmap() */
+	gman_dma_addr_t    paddr;
+	void               *map;           /* userspace mmap'ing (if there is one) */
+	uint32_t           size;
+	uint32_t           handle;
+	uint32_t           flags;
+	uint64_t           offset;         /* offset to mmap() */
 };
 
 /* debug stuff:
  */
 
-#define enable_debug 1
+#define gman_enable_debug 1
 
 #define INFO_MSG(fmt, ...) \
 		do { drmMsg("[I] "fmt " (%s:%d)\n", \
 				##__VA_ARGS__, __FUNCTION__, __LINE__); } while (0)
 #define DEBUG_MSG(fmt, ...) \
-		do if (enable_debug) { drmMsg("[D] "fmt " (%s:%d)\n", \
+		do if (gman_enable_debug) { drmMsg("[D] "fmt " (%s:%d)\n", \
 				##__VA_ARGS__, __FUNCTION__, __LINE__); } while (0)
 #define WARN_MSG(fmt, ...) \
 		do { drmMsg("[W] "fmt " (%s:%d)\n", \

@@ -19,7 +19,7 @@ gman_bo_priv(struct gman_bo *bo)
 
 /* allocate a new buffer object, call w/ table_lock held */
 static struct gman_bo *bo_from_handle(struct gman_device *dev,
-		uint32_t size, uint32_t handle, uint32_t flags, void *paddr)
+		uint32_t size, uint32_t handle, uint32_t flags, gman_dma_addr_t paddr)
 {
 	struct gman_bo_priv *bo = calloc(sizeof(*bo), 1);
 
@@ -37,8 +37,7 @@ static struct gman_bo *bo_from_handle(struct gman_device *dev,
 	bo->size = size;
 	bo->handle = handle;
 	bo->flags = flags;
-	bo->base.paddr = paddr;
-	bo->base.handle = handle;
+	bo->paddr = paddr;
 
 	return &bo->base;
 }
@@ -60,7 +59,7 @@ struct gman_bo *gman_bo_new(struct gman_device *dev, uint32_t size,
 	if (ret)
 		return NULL;
 
-	bo = bo_from_handle(dev, size, req.handle, flags, U642VOID(req.paddr));
+	bo = bo_from_handle(dev, size, req.handle, flags, req.paddr);
 
 	return bo;
 }
@@ -105,14 +104,18 @@ void *gman_bo_map(struct gman_bo *bo)
 		}
 	}
 
-	bo->map = priv->map;
-
 	return priv->map;
+}
+
+gman_dma_addr_t gman_bo_dma_addr(struct gman_bo *bo)
+{	
+	struct gman_bo_priv *priv = gman_bo_priv(bo);
+	return priv->paddr;
 }
 
 
 /* get buffer info required by user space driver */
-static int get_buffer_user(struct gman_device *dev, uint32_t handle, void** paddr)
+static int get_buffer_user(struct gman_device *dev, uint32_t handle, gman_dma_addr_t* paddr)
 {
 	int ret;
 	struct drm_gman_gem_user req = {
@@ -125,7 +128,7 @@ static int get_buffer_user(struct gman_device *dev, uint32_t handle, void** padd
 		return ret;
 	}
 
-	*paddr = U642VOID(req.paddr);
+	*paddr = req.paddr;
 
 	return 0;
 }
@@ -140,7 +143,7 @@ struct gman_bo *gman_bo_from_dmabuf(struct gman_device *dev, int fd)
 	struct gman_bo *bo;
 	int ret, size;
 	uint32_t handle;
-	void *paddr = NULL;
+	gman_dma_addr_t paddr = 0;
 
 	ret = drmPrimeFDToHandle(dev->fd, fd, &handle);
 	if (ret) {

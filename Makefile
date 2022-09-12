@@ -6,6 +6,7 @@ VERSION := $(MAJOR).$(MINOR)
 LIBDRM_GMAN_FILES := \
 	gman_device.c \
 	gman_bo.c  \
+	gman_fbo.c  \
 
 LIBDRM_GMAN_OBJ_FILES := $(LIBDRM_GMAN_FILES:%.c=%.o)
 
@@ -14,6 +15,15 @@ UAPIIF_HEADER := gman_drmif.h
 
 CFLAGS += -shared -fPIC -MMD -Wall -I../../../../interface/src
 CFLAGS += $(shell pkg-config --cflags libdrm)
+CFLAGS += -ldrm
+
+# Optional support for DI FBOs
+CFLAGS += -DSUPPORT_DI
+CFLAGS += -I$(DI_PATH)/inc -I$(DI_PATH)/src/linux_genip
+
+LDFLAGS += \
+	-Wl,--no-undefined \
+	-Wl,-ldrm
 
 .PHONY:
 all : lib$(NAME).so
@@ -25,7 +35,7 @@ lib$(NAME).so.$(MAJOR) : lib$(NAME).so.$(VERSION)
 	ln -fs $^ $@
 
 lib$(NAME).so.$(VERSION) : $(LIBDRM_GMAN_OBJ_FILES)
-	$(CC) $(CFLAGS) $(LDFLAGS) -Wl,-soname,lib$(NAME).so.$(MAJOR) -o $@ $^
+	$(CC) $(CFLAGS) -Wl,-soname,lib$(NAME).so.$(MAJOR) -o $@ $^ $(LDFLAGS)
 
 .PHONY:
 clean :
@@ -33,9 +43,4 @@ clean :
 
 .PHONY:
 deploy : all
-	scp  lib$(NAME).so* root@$(BOARD_IP):/usr/lib/
-
-.PHONY:
-scp: lib$(NAME).so.$(VERSION)
-	$(STRIP) lib$(NAME).so.$(VERSION)
-	scp lib$(NAME).so.$(VERSION) $(SCP_USER)@$(SCP_HOST):$(SCP_PATH)
+	scp  lib$(NAME).so.$(VERSION) root@$(BOARD_IP):/usr/lib/
